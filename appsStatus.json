@@ -1,4 +1,6 @@
 {
+    "frequency": 10,
+    "randomise": 20,
     "apps": [
         {
             "name": "code",

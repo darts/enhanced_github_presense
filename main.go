@@ -16,7 +16,9 @@ type AppStatus struct {
 }
 
 type AppList struct {
-	Apps []AppStatus `json:"apps"`
+	Frequency int32       `json:"frequency"`
+	Randomise int32       `json:"randomise"`
+	Apps      []AppStatus `json:"apps"`
 }
 
 func filterApps[K any](ss []K, test func(K) bool) (ret []K) {
@@ -81,7 +83,25 @@ func parseAppsFromFile() *AppList {
 	return &apps
 }
 
+func writeToGithubStatus(str string) bool {
+	fmt.Printf("Writing to Github status: %s\n", str)
+	fmt.Println("UPDATE GRAPHQL QUERY")
+	return true
+}
+
+func manageStatus() {
+	for true {
+		// get running apps
+		// get app to write
+		// write app status
+		// sleep for <time>
+	}
+}
+
 func main() {
+	// load app config
+	// load other config
+
 	apps := parseAppsFromFile()
 	fmt.Println(apps)
 
