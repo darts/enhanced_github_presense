@@ -1,0 +1,14 @@
+{
+    "apps": [
+        {
+            "name": "code",
+            "statusText": "Being a l33t hax0r",
+            "priority": 1
+        },
+        {
+            "name": "firefox-bin",
+            "statusText": "Perusing stackoverflow",
+            "priority": 1
+        }
+    ]
+}
