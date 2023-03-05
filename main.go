@@ -118,27 +118,29 @@ func getAppMap(sortedArr []AppStatus) map[int32][]AppStatus {
 	return retMap
 }
 
+func getCurrentApp(activeApps map[string]bool, appList []AppStatus, appMap map[int32][]AppStatus, fallback string) string {
+	for _, app := range appList {
+		appIsRunning := activeApps[app.Name]
+		if appIsRunning {
+			return app.StatusText
+		}
+	}
+	return fallback
+}
+
 func manageStatus() {
 	appConfig := parseAppsFromFile()
 	appList := appConfig.Apps
-	sort.Slice(appList, func(i, j int) bool { return appList[i].Priority > appList[j].Priority })
+	sort.Slice(appList, func(i, j int) bool { return appList[i].Priority < appList[j].Priority })
 	appMap := getAppMap(appList)
-	fmt.Println(appMap)
 	for true {
-		time.Sleep(time.Duration(appConfig.Frequency) * time.Millisecond)
-		// get running apps
-		// get app to write
-		// write app status
-		// sleep for <time>
+		activeApps := toHashSet(toSingletonArray(getRunningApps()))
+		curStr := getCurrentApp(activeApps, appList, appMap, appConfig.FallbackStatus)
+		writeToGithubStatus(curStr)
+		time.Sleep(time.Duration(appConfig.Frequency) * time.Second)
 	}
 }
 
 func main() {
-	appConfig := parseAppsFromFile()
-	fmt.Println(appConfig)
-
-	arr := toHashSet(toSingletonArray(getRunningApps()))
-	fmt.Println(arr)
-
 	manageStatus()
 }

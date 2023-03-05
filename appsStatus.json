@@ -1,8 +1,13 @@
 {
-    "frequency": 10,
+    "frequency": 30,
     "randomise": 20,
     "fallback": "Probably sleeping",
     "apps": [
+        {
+            "name": "steamwebhelper",
+            "statusText": "Gaming",
+            "priority": 0
+        },
         {
             "name": "code",
             "statusText": "Being a l33t hax0r",
@@ -11,7 +16,7 @@
         {
             "name": "firefox-bin",
             "statusText": "Perusing stackoverflow",
-            "priority": 1
+            "priority": 2
         }
     ]
 }
