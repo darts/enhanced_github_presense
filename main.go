@@ -38,18 +38,27 @@ func splitToArray(s string) []string {
 	return ret
 }
 
-func main() {
-	a := exec.Command("ps", "-A")
-	var out bytes.Buffer
-	a.Stdout = &out
-	a.Run()
-	stringifiedOutput := string(out.Bytes())
-	splitStr := strings.Split(stringifiedOutput, "\n")
-	var splitArr [][]string
+func getRelevantArr(rawStr string) (splitArr [][]string) {
+	splitStr := strings.Split(rawStr, "\n")
 	for i := 0; i < len(splitStr); i++ {
 		splitArr = append(splitArr, splitToArray(splitStr[i]))
 	}
 	splitArr = filterApps(splitArr, lenCheckArr)
+	// TODO: deduplicate
+	return splitArr
+}
+
+func getRunningApps() [][]string {
+	a := exec.Command("ps", "-A")
+	var out bytes.Buffer
+	a.Stdout = &out
+	a.Run()
+	splitArr := getRelevantArr(string(out.Bytes()))
+	return splitArr
+}
+
+func main() {
+	splitArr := getRunningApps()
 	for i := 0; i < len(splitArr); i++ {
 		fmt.Println(splitArr[i][3])
 	}
