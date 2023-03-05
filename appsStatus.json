@@ -1,6 +1,7 @@
 {
     "frequency": 10,
     "randomise": 20,
+    "fallback": "Probably sleeping",
     "apps": [
         {
             "name": "code",

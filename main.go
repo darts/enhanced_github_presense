@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"sort"
 	"strings"
+	"time"
 )
 
 type AppStatus struct {
@@ -16,9 +18,10 @@ type AppStatus struct {
 }
 
 type AppList struct {
-	Frequency int32       `json:"frequency"`
-	Randomise int32       `json:"randomise"`
-	Apps      []AppStatus `json:"apps"`
+	Frequency      int32       `json:"frequency"`
+	Randomise      int32       `json:"randomise"`
+	FallbackStatus string      `json:"fallback"`
+	Apps           []AppStatus `json:"apps"`
 }
 
 func filterApps[K any](ss []K, test func(K) bool) (ret []K) {
@@ -52,7 +55,6 @@ func getRelevantArr(rawStr string) (splitArr [][]string) {
 		splitArr = append(splitArr, splitToArray(splitStr[i]))
 	}
 	splitArr = filterApps(splitArr, lenCheckArr)
-	// TODO: deduplicate
 	return splitArr
 }
 
@@ -63,6 +65,21 @@ func getRunningApps() [][]string {
 	a.Run()
 	splitArr := getRelevantArr(string(out.Bytes()))
 	return splitArr
+}
+
+func toSingletonArray(arr [][]string) (retArr []string) {
+	for _, strArr := range arr {
+		retArr = append(retArr, strArr[3])
+	}
+	return
+}
+
+func toHashSet(arr []string) map[string]bool {
+	retMap := map[string]bool{}
+	for _, strArr := range arr {
+		retMap[strArr] = true
+	}
+	return retMap
 }
 
 func parseAppsFromFile() *AppList {
@@ -89,8 +106,26 @@ func writeToGithubStatus(str string) bool {
 	return true
 }
 
+func getAppMap(sortedArr []AppStatus) map[int32][]AppStatus {
+	retMap := map[int32][]AppStatus{}
+	for _, app := range sortedArr {
+		if retMap[app.Priority] == nil {
+			retMap[app.Priority] = []AppStatus{app}
+		} else {
+			retMap[app.Priority] = append(retMap[app.Priority], app)
+		}
+	}
+	return retMap
+}
+
 func manageStatus() {
+	appConfig := parseAppsFromFile()
+	appList := appConfig.Apps
+	sort.Slice(appList, func(i, j int) bool { return appList[i].Priority > appList[j].Priority })
+	appMap := getAppMap(appList)
+	fmt.Println(appMap)
 	for true {
+		time.Sleep(time.Duration(appConfig.Frequency) * time.Millisecond)
 		// get running apps
 		// get app to write
 		// write app status
@@ -99,14 +134,11 @@ func manageStatus() {
 }
 
 func main() {
-	// load app config
-	// load other config
+	appConfig := parseAppsFromFile()
+	fmt.Println(appConfig)
 
-	apps := parseAppsFromFile()
-	fmt.Println(apps)
+	arr := toHashSet(toSingletonArray(getRunningApps()))
+	fmt.Println(arr)
 
-	splitArr := getRunningApps()
-	for i := 0; i < len(splitArr); i++ {
-		fmt.Println(splitArr[i][3])
-	}
+	manageStatus()
 }
