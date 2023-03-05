@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -11,6 +13,10 @@ type AppStatus struct {
 	Name       string `json:"name"`
 	StatusText string `json:"statusText"`
 	Priority   int32  `json:"priority"`
+}
+
+type AppList struct {
+	Apps []AppStatus `json:"apps"`
 }
 
 func filterApps[K any](ss []K, test func(K) bool) (ret []K) {
@@ -40,7 +46,7 @@ func splitToArray(s string) []string {
 
 func getRelevantArr(rawStr string) (splitArr [][]string) {
 	splitStr := strings.Split(rawStr, "\n")
-	for i := 0; i < len(splitStr); i++ {
+	for i := 1; i < len(splitStr); i++ {
 		splitArr = append(splitArr, splitToArray(splitStr[i]))
 	}
 	splitArr = filterApps(splitArr, lenCheckArr)
@@ -57,7 +63,28 @@ func getRunningApps() [][]string {
 	return splitArr
 }
 
+func parseAppsFromFile() *AppList {
+	jsonFilename := "./appsStatus.json"
+	jsonFile, err := os.ReadFile(jsonFilename)
+	if err != nil {
+		// TODO: replace with log.fatal
+		fmt.Fprintf(os.Stderr, "Opening apps list file failed: %v\n", err)
+		os.Exit(1)
+	}
+	var apps AppList
+	err = json.Unmarshal(jsonFile, &apps)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Parsing apps list failed: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Fprintln(os.Stdout, "Loaded JSON from file.")
+	return &apps
+}
+
 func main() {
+	apps := parseAppsFromFile()
+	fmt.Println(apps)
+
 	splitArr := getRunningApps()
 	for i := 0; i < len(splitArr); i++ {
 		fmt.Println(splitArr[i][3])
