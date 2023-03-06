@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
 	"sort"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -103,6 +105,7 @@ func parseAppsFromFile() *AppList {
 func writeToGithubStatus(str string) bool {
 	fmt.Printf("Writing to Github status: %s\n", str)
 	fmt.Println("UPDATE GRAPHQL QUERY")
+
 	return true
 }
 
@@ -141,6 +144,15 @@ func manageStatus() {
 	}
 }
 
+func resetOnClose() {
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+	<-sig // buffered channels block if empty
+	writeToGithubStatus("")
+	os.Exit(0)
+}
+
 func main() {
+	go resetOnClose()
 	manageStatus()
 }
