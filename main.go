@@ -2,8 +2,12 @@ package main
 
 import (
 	"bytes"
+	"context"
+	"darts/gql"
 	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -11,6 +15,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/Khan/genqlient/graphql"
 )
 
 type AppStatus struct {
@@ -24,6 +30,18 @@ type AppList struct {
 	Randomise      int32       `json:"randomise"`
 	FallbackStatus string      `json:"fallback"`
 	Apps           []AppStatus `json:"apps"`
+}
+
+type authedTransport struct {
+	key     string
+	wrapped http.RoundTripper
+}
+
+var graphqlClient graphql.Client
+
+func (t *authedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("Authorization", "bearer "+t.key)
+	return t.wrapped.RoundTrip(req)
 }
 
 func filterApps[K any](ss []K, test func(K) bool) (ret []K) {
@@ -88,25 +106,26 @@ func parseAppsFromFile() *AppList {
 	jsonFilename := "./appsStatus.json"
 	jsonFile, err := os.ReadFile(jsonFilename)
 	if err != nil {
-		// TODO: replace with log.fatal
-		fmt.Fprintf(os.Stderr, "Opening apps list file failed: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("Opening apps list file failed: %v\n", err)
 	}
 	var apps AppList
 	err = json.Unmarshal(jsonFile, &apps)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Parsing apps list failed: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("Parsing apps list failed: %v\n", err)
 	}
-	fmt.Fprintln(os.Stdout, "Loaded JSON from file.")
+	fmt.Println("Loaded JSON from file.")
 	return &apps
 }
 
-func writeToGithubStatus(str string) bool {
+func writeToGithubStatus(str string, expiry time.Time) bool {
 	fmt.Printf("Writing to Github status: %s\n", str)
-	fmt.Println("UPDATE GRAPHQL QUERY")
-
-	return true
+	gqlReq := gql.ChangeUserStatusInput{ClientMutationId: "darts/status", Message: str}
+	res, err := gql.UpdateStatus(context.Background(), graphqlClient, gqlReq)
+	fmt.Println(res)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Call to Github failed: %s\n", err)
+	}
+	return err == nil
 }
 
 func getAppMap(sortedArr []AppStatus) map[int32][]AppStatus {
@@ -139,7 +158,8 @@ func manageStatus() {
 	for true {
 		activeApps := toHashSet(toSingletonArray(getRunningApps()))
 		curStr := getCurrentApp(activeApps, appList, appMap, appConfig.FallbackStatus)
-		writeToGithubStatus(curStr)
+		expiry := time.Now().Add(time.Duration(appConfig.Frequency) * time.Second * 3) // expire after 3 missed updates
+		writeToGithubStatus(curStr, expiry)
 		time.Sleep(time.Duration(appConfig.Frequency) * time.Second)
 	}
 }
@@ -148,11 +168,32 @@ func resetOnClose() {
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 	<-sig // buffered channels block if empty
-	writeToGithubStatus("")
+	writeToGithubStatus("", time.Now())
 	os.Exit(0)
+}
+
+func initClient() {
+	authToken := os.Getenv("GITHUB_PAT")
+
+	if authToken == "" {
+		log.Fatal("GITHUB_PAT not set")
+	}
+
+	httpClient := http.Client{
+		Transport: &authedTransport{
+			key:     authToken,
+			wrapped: http.DefaultTransport,
+		},
+	}
+
+	graphqlClient = graphql.NewClient("https://api.github.com/graphql", &httpClient)
+	resp, err := gql.MyQuery(context.Background(), graphqlClient)
+	fmt.Println(resp, err)
 }
 
 func main() {
 	go resetOnClose()
+
+	initClient()
 	manageStatus()
 }

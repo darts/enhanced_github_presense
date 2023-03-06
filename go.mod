@@ -1,3 +1,3 @@
-module test/running
+module darts/status
 
 go 1.18
