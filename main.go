@@ -32,6 +32,11 @@ type AppList struct {
 	Apps           []AppStatus `json:"apps"`
 }
 
+type UserStatus struct {
+	ClientMutationId string `json:"clientMutationId"`
+	Message          string `json:"message"`
+}
+
 type authedTransport struct {
 	key     string
 	wrapped http.RoundTripper
@@ -118,15 +123,21 @@ func parseAppsFromFile() *AppList {
 }
 
 func writeToGithubStatus(str string, expiry time.Time) bool {
-	fmt.Printf("Writing to Github status: %s\n", str)
-	gqlReq := gql.ChangeUserStatusInput{ClientMutationId: "darts/status", Message: str}
-	res, err := gql.UpdateStatus(context.Background(), graphqlClient, gqlReq)
-	fmt.Println(res)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Call to Github failed: %s\n", err)
-	}
-	return err == nil
+	// fmt.Printf("Writing to Github status: %s\n", str)
+	// gqlReq := gql.ChangeUserStatusInput{ClientMutationId: "darts/status", Message: str, ExpiresAt: expiry}
+	// res, err := gql.UpdateStatus(context.Background(), graphqlClient, gqlReq)
+	// fmt.Println(res)
+	// if err != nil {
+	// 	fmt.Fprintf(os.Stderr, "Call to Github failed: %s\n", err)
+	// }
+	// return err == nil
+	return true
 }
+
+// func manWriteToGithubStatus(str string) bool {
+// 	client := graphql.NewClient("https://machinebox.io/graphql")
+
+// }
 
 func getAppMap(sortedArr []AppStatus) map[int32][]AppStatus {
 	retMap := map[int32][]AppStatus{}
@@ -179,6 +190,74 @@ func initClient() {
 		log.Fatal("GITHUB_PAT not set")
 	}
 
+	// client := graphql.NewClient("https://api.github.com/graphql")
+
+	// req := graphql.NewRequest(`
+	// 	query {
+	// 		viewer {
+	// 			login
+	// 		}
+	// 	}
+	// `)
+
+	// // set any variables
+	// // req.Var("key", "value")
+
+	// // set header fields
+	// req.Header.Set("Authorization", "bearer "+authToken)
+
+	// // define a Context for the request
+	// ctx := context.Background()
+
+	// // run it and capture the response
+	// var respData interface{}
+	// if err := client.Run(ctx, req, &respData); err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// fmt.Println(respData)
+
+	// mut := graphql.NewRequest(`
+	// 	mutation UpdateStatus($input: ChangeUserStatusInput!) {
+	// 		changeUserStatus(input: $input) {
+	// 			clientMutationId
+	// 			status {
+	// 				message
+	// 			}
+	// 		}
+	// 	}
+	// `)
+
+	// mut.Header.Set("Authorization", "bearer "+authToken)
+
+	// // tst := UserStatus{ClientMutationId: "darts/status", Message: "test"}
+
+	// tst2 := gql.ChangeUserStatusInput{ClientMutationId: "darts/status", Message: "test"}
+
+	// // variables := map[string]interface{}{
+	// // 	"clientMutationId": "darts/test",
+	// // 	"message":          "test",
+	// // }
+
+	// tst3, _ := json.Marshal(tst2)
+
+	// // set any variables
+	// req.Var("input", string(tst3))
+	// req.Var("$input", string(tst3))
+
+	// // define a Context for the request
+	// ctx2 := context.Background()
+
+	// // run it and capture the response
+	// var respData2 interface{}
+	// if err := client.Run(ctx2, mut, &respData2); err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// fmt.Println(respData2)
+
+	// return
+
 	httpClient := http.Client{
 		Transport: &authedTransport{
 			key:     authToken,
@@ -187,13 +266,18 @@ func initClient() {
 	}
 
 	graphqlClient = graphql.NewClient("https://api.github.com/graphql", &httpClient)
-	resp, err := gql.MyQuery(context.Background(), graphqlClient)
+	resp, err := gql.WhoAmI(context.Background(), graphqlClient)
 	fmt.Println(resp, err)
+
+	input := gql.ChangeUserStatusInput{ClientMutationId: "test", Message: "test", ExpiresAt: time.Now()}
+
+	res, er := gql.UpdateStatus(context.Background(), graphqlClient, input)
+	fmt.Println(res, er)
 }
 
 func main() {
 	go resetOnClose()
 
 	initClient()
-	manageStatus()
+	// manageStatus()
 }

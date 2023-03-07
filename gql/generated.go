@@ -44,31 +44,6 @@ func (v *ChangeUserStatusInput) GetMessage() string { return v.Message }
 // GetOrganizationId returns ChangeUserStatusInput.OrganizationId, and is useful for accessing the field via an interface.
 func (v *ChangeUserStatusInput) GetOrganizationId() string { return v.OrganizationId }
 
-// MyQueryResponse is returned by MyQuery on success.
-type MyQueryResponse struct {
-	// The currently authenticated user.
-	Viewer MyQueryViewerUser `json:"viewer"`
-}
-
-// GetViewer returns MyQueryResponse.Viewer, and is useful for accessing the field via an interface.
-func (v *MyQueryResponse) GetViewer() MyQueryViewerUser { return v.Viewer }
-
-// MyQueryViewerUser includes the requested fields of the GraphQL type User.
-// The GraphQL type's documentation follows.
-//
-// A user is an individual's account on GitHub that owns repositories and can make new content.
-type MyQueryViewerUser struct {
-	Id string `json:"id"`
-	// The user's public profile name.
-	Name string `json:"name"`
-}
-
-// GetId returns MyQueryViewerUser.Id, and is useful for accessing the field via an interface.
-func (v *MyQueryViewerUser) GetId() string { return v.Id }
-
-// GetName returns MyQueryViewerUser.Name, and is useful for accessing the field via an interface.
-func (v *MyQueryViewerUser) GetName() string { return v.Name }
-
 // UpdateStatusChangeUserStatusChangeUserStatusPayload includes the requested fields of the GraphQL type ChangeUserStatusPayload.
 // The GraphQL type's documentation follows.
 //
@@ -122,6 +97,31 @@ func (v *UpdateStatusResponse) GetChangeUserStatus() UpdateStatusChangeUserStatu
 	return v.ChangeUserStatus
 }
 
+// WhoAmIResponse is returned by WhoAmI on success.
+type WhoAmIResponse struct {
+	// The currently authenticated user.
+	Viewer WhoAmIViewerUser `json:"viewer"`
+}
+
+// GetViewer returns WhoAmIResponse.Viewer, and is useful for accessing the field via an interface.
+func (v *WhoAmIResponse) GetViewer() WhoAmIViewerUser { return v.Viewer }
+
+// WhoAmIViewerUser includes the requested fields of the GraphQL type User.
+// The GraphQL type's documentation follows.
+//
+// A user is an individual's account on GitHub that owns repositories and can make new content.
+type WhoAmIViewerUser struct {
+	Id string `json:"id"`
+	// The user's public profile name.
+	Name string `json:"name"`
+}
+
+// GetId returns WhoAmIViewerUser.Id, and is useful for accessing the field via an interface.
+func (v *WhoAmIViewerUser) GetId() string { return v.Id }
+
+// GetName returns WhoAmIViewerUser.Name, and is useful for accessing the field via an interface.
+func (v *WhoAmIViewerUser) GetName() string { return v.Name }
+
 // __UpdateStatusInput is used internally by genqlient
 type __UpdateStatusInput struct {
 	Input ChangeUserStatusInput `json:"input"`
@@ -129,35 +129,6 @@ type __UpdateStatusInput struct {
 
 // GetInput returns __UpdateStatusInput.Input, and is useful for accessing the field via an interface.
 func (v *__UpdateStatusInput) GetInput() ChangeUserStatusInput { return v.Input }
-
-func MyQuery(
-	ctx context.Context,
-	client graphql.Client,
-) (*MyQueryResponse, error) {
-	req := &graphql.Request{
-		OpName: "MyQuery",
-		Query: `
-query MyQuery {
-	viewer {
-		id
-		name
-	}
-}
-`,
-	}
-	var err error
-
-	var data MyQueryResponse
-	resp := &graphql.Response{Data: &data}
-
-	err = client.MakeRequest(
-		ctx,
-		req,
-		resp,
-	)
-
-	return &data, err
-}
 
 func UpdateStatus(
 	ctx context.Context,
@@ -184,6 +155,35 @@ mutation UpdateStatus ($input: ChangeUserStatusInput!) {
 	var err error
 
 	var data UpdateStatusResponse
+	resp := &graphql.Response{Data: &data}
+
+	err = client.MakeRequest(
+		ctx,
+		req,
+		resp,
+	)
+
+	return &data, err
+}
+
+func WhoAmI(
+	ctx context.Context,
+	client graphql.Client,
+) (*WhoAmIResponse, error) {
+	req := &graphql.Request{
+		OpName: "WhoAmI",
+		Query: `
+query WhoAmI {
+	viewer {
+		id
+		name
+	}
+}
+`,
+	}
+	var err error
+
+	var data WhoAmIResponse
 	resp := &graphql.Response{Data: &data}
 
 	err = client.MakeRequest(

@@ -8,7 +8,7 @@ mutation UpdateStatus($input: ChangeUserStatusInput!) {
   }
 }
 
-query MyQuery {
+query WhoAmI {
   viewer {
     id
     name
