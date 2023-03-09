@@ -1,6 +1,12 @@
 # enhanced_github_presense
 Like discord presence but github and with a typo
 
+## Setup
+
+1. Update `appsStatus.json` to your preferred settings.
+2. Add Github PAT with _user_ permissions to environment variable `GITHUB_PAT`.
+3. Start the application.
+
 
 ## Fucking gql libraries
 
