@@ -148,19 +148,7 @@ func writeToGithubStatus(str string, emoji string, expiry time.Time) bool {
 	return err == nil
 }
 
-func getAppMap(sortedArr []AppStatus) map[int32][]AppStatus {
-	retMap := map[int32][]AppStatus{}
-	for _, app := range sortedArr {
-		if retMap[app.Priority] == nil {
-			retMap[app.Priority] = []AppStatus{app}
-		} else {
-			retMap[app.Priority] = append(retMap[app.Priority], app)
-		}
-	}
-	return retMap
-}
-
-func getCurrentApp(activeApps map[string]bool, appList []AppStatus, appMap map[int32][]AppStatus, config AppList) (string, string) {
+func getCurrentApp(activeApps map[string]bool, appList []AppStatus, config AppList) (string, string) {
 	allListedRunningApps := []AppStatus{}
 	minPriority := int32(math.Inf(1)) - 1
 	hasActiveApp := false
@@ -188,10 +176,9 @@ func manageStatus() {
 	appConfig := parseAppsFromFile()
 	appList := appConfig.Apps
 	sort.Slice(appList, func(i, j int) bool { return appList[i].Priority < appList[j].Priority })
-	appMap := getAppMap(appList)
 	for true {
 		activeApps := toHashSet(toSingletonArray(getRunningApps()))
-		curStr, curEmoji := getCurrentApp(activeApps, appList, appMap, *appConfig)
+		curStr, curEmoji := getCurrentApp(activeApps, appList, *appConfig)
 		expiry := time.Now().Add(time.Duration(appConfig.Frequency) * time.Second * 3) // expire after 3 missed updates
 		writeToGithubStatus(curStr, curEmoji, expiry)
 		time.Sleep(time.Duration(appConfig.Frequency) * time.Second)
