@@ -1,36 +1,42 @@
 {
-    "frequency": 10,
+    "frequency": 20,
     "fallback": "Probably sleeping",
     "fallback_emoji": ":zzz:",
     "apps": [
         {
             "names": ["steamwebhelper"],
-            "statusText": "Gaming",
-            "emoji": ":video_game:",
+            "vals": [{ "statusText": "Gaming", "emoji": ":video_game:" }],
             "priority": 0
         },
         {
             "names": ["code"],
-            "statusText": "Being a l33t hax0r",
-            "emoji": ":computer:",
-            "priority": 1
-        },
-        {
-            "names": ["code"],
-            "statusText": "Doing \"actual work\"",
-            "emoji": ":computer:",
+            "vals": [
+                {
+                    "statusText": "Doing \"actual work\"",
+                    "emoji": ":computer:"
+                },
+                { "statusText": "Being a l33t hax0r", "emoji": ":computer:" }
+            ],
             "priority": 1
         },
         {
             "names": ["firefox-bin", "firefox"],
-            "statusText": "Perusing stackoverflow",
-            "emoji": ":surfer:",
+            "vals": [
+                {
+                    "statusText": "Perusing stackoverflow",
+                    "emoji": ":surfer:"
+                }
+            ],
             "priority": 1
         },
         {
             "names": ["signal-desktop", "signal"],
-            "statusText": "Just chatting",
-            "emoji": ":speaking_head:",
+            "vals": [
+                {
+                    "statusText": "Just chatting",
+                    "emoji": ":speaking_head:"
+                }
+            ],
             "priority": 2
         }
     ]

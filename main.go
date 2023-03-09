@@ -22,11 +22,15 @@ import (
 	graphql "github.com/hasura/go-graphql-client"
 )
 
+type StatusPair struct {
+	StatusText string `json:"statusText"`
+	Emoji      string `json:"emoji"`
+}
+
 type AppStatus struct {
-	Names      []string `json:"names"`
-	StatusText string   `json:"statusText"`
-	Priority   int32    `json:"priority"`
-	Emoji      string   `json:"emoji"`
+	Names    []string     `json:"names"`
+	Vals     []StatusPair `json:"vals"`
+	Priority int32        `json:"priority"`
 }
 
 type AppList struct {
@@ -37,11 +41,10 @@ type AppList struct {
 }
 
 type ChangeUserStatusInput struct {
-	ClientMutationId string `json:"clientMutationId"`
-	// The emoji to represent your status. Can either be a native Unicode emoji or an emoji name with colons, e.g., :grinning:.
-	Emoji     string    `json:"emoji"`
-	ExpiresAt time.Time `json:"expiresAt"`
-	Message   string    `json:"message"`
+	ClientMutationId string    `json:"clientMutationId"`
+	Emoji            string    `json:"emoji"`
+	ExpiresAt        time.Time `json:"expiresAt"`
+	Message          string    `json:"message"`
 }
 
 type authedTransport struct {
@@ -197,9 +200,10 @@ func getCurrentApp(activeApps map[string]bool, appList []AppStatus, config AppLi
 		return config.FallbackStatus, config.FallbackEmoji
 	}
 
-	aRandomApp := allListedRunningApps[rand.Intn(len(allListedRunningApps))]
+	appsVals := allListedRunningApps[rand.Intn(len(allListedRunningApps))].Vals
+	aRandomAppStatus := appsVals[rand.Intn(len(appsVals))]
 
-	return aRandomApp.StatusText, aRandomApp.Emoji
+	return aRandomAppStatus.StatusText, aRandomAppStatus.Emoji
 }
 
 func manageStatus() {
@@ -224,10 +228,21 @@ func resetOnClose() {
 }
 
 func initClient() {
-	authToken := os.Getenv("GITHUB_PAT")
+	authTokenEnv := os.Getenv("GITHUB_PAT")
 
-	if authToken == "" {
-		log.Fatal("GITHUB_PAT not set")
+	var authTokenCmd = ""
+	if len(os.Args) > 1 {
+		authTokenCmd = os.Args[1]
+	}
+
+	if len(authTokenEnv) < 1 && len(authTokenCmd) < 1 {
+		log.Fatal("GITHUB_PAT env variable not set & no token passed to app.\nUsage: status <token>")
+	}
+
+	var authToken = authTokenEnv
+
+	if len(authTokenCmd) > 0 {
+		authToken = authTokenCmd
 	}
 
 	httpClient := http.Client{
