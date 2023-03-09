@@ -23,10 +23,10 @@ import (
 )
 
 type AppStatus struct {
-	Name       string `json:"name"`
-	StatusText string `json:"statusText"`
-	Priority   int32  `json:"priority"`
-	Emoji      string `json:"emoji"`
+	Names      []string `json:"names"`
+	StatusText string   `json:"statusText"`
+	Priority   int32    `json:"priority"`
+	Emoji      string   `json:"emoji"`
 }
 
 type AppList struct {
@@ -180,13 +180,16 @@ func getCurrentApp(activeApps map[string]bool, appList []AppStatus, config AppLi
 	minPriority := int32(math.Inf(1)) - 1
 	hasActiveApp := false
 	for _, app := range appList {
-		if activeApps[app.Name] {
-			hasActiveApp = true
-			if app.Priority < minPriority {
-				minPriority = app.Priority
-				allListedRunningApps = []AppStatus{app}
-			} else if app.Priority == minPriority {
-				allListedRunningApps = append(allListedRunningApps, app)
+		for _, appName := range app.Names {
+			if activeApps[appName] {
+				hasActiveApp = true
+				if app.Priority < minPriority {
+					minPriority = app.Priority
+					allListedRunningApps = []AppStatus{app}
+				} else if app.Priority == minPriority {
+					allListedRunningApps = append(allListedRunningApps, app)
+				}
+				break
 			}
 		}
 	}

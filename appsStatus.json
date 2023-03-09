@@ -4,31 +4,31 @@
     "fallback_emoji": ":zzz:",
     "apps": [
         {
-            "name": "steamwebhelper",
+            "names": ["steamwebhelper"],
             "statusText": "Gaming",
             "emoji": ":video_game:",
             "priority": 0
         },
         {
-            "name": "code",
+            "names": ["code"],
             "statusText": "Being a l33t hax0r",
             "emoji": ":computer:",
             "priority": 1
         },
         {
-            "name": "code",
+            "names": ["code"],
             "statusText": "Doing \"actual work\"",
             "emoji": ":computer:",
             "priority": 1
         },
         {
-            "name": "firefox-bin",
+            "names": ["firefox-bin", "firefox"],
             "statusText": "Perusing stackoverflow",
             "emoji": ":surfer:",
             "priority": 1
         },
         {
-            "name": "signal-desktop",
+            "names": ["signal-desktop", "signal"],
             "statusText": "Just chatting",
             "emoji": ":speaking_head:",
             "priority": 2
