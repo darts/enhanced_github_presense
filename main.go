@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"runtime"
 	"sort"
 	"strings"
 	"syscall"
@@ -48,6 +49,7 @@ type authedTransport struct {
 }
 
 var graphqlClient *graphql.Client
+var isWindows bool
 
 var statusMutation struct {
 	ChangeUserStatus struct {
@@ -90,25 +92,51 @@ func splitToArray(s string) []string {
 
 func getRelevantArr(rawStr string) (splitArr [][]string) {
 	splitStr := strings.Split(rawStr, "\n")
-	for i := 1; i < len(splitStr); i++ {
-		splitArr = append(splitArr, splitToArray(splitStr[i]))
+	i := 1
+	if isWindows {
+		i = 3
+	}
+	for ; i < len(splitStr); i++ {
+		if len(splitStr[i]) > 3 {
+			splitArr = append(splitArr, splitToArray(splitStr[i]))
+		}
 	}
 	splitArr = filterApps(splitArr, lenCheckArr)
 	return splitArr
 }
 
-func getRunningApps() [][]string {
+func getAppsWin() (splitArr [][]string) {
+	a := exec.Command("powershell", "-NoProfile", "Get-Process | Where-Object {$_.MainWindowHandle -ne 0} | Select-Object ProcessName")
+	var out bytes.Buffer
+	a.Stdout = &out
+	a.Run()
+	splitArr = getRelevantArr(out.String())
+	return
+}
+
+func getAppsLinux() (splitArr [][]string) {
 	a := exec.Command("ps", "-A")
 	var out bytes.Buffer
 	a.Stdout = &out
 	a.Run()
-	splitArr := getRelevantArr(string(out.Bytes()))
-	return splitArr
+	splitArr = getRelevantArr(out.String())
+	return
+}
+
+func getRunningApps() [][]string {
+	if isWindows {
+		return getAppsWin()
+	}
+	return getAppsLinux()
 }
 
 func toSingletonArray(arr [][]string) (retArr []string) {
+	idx := 3
+	if isWindows {
+		idx = 0
+	}
 	for _, strArr := range arr {
-		retArr = append(retArr, strArr[3])
+		retArr = append(retArr, strings.ToLower(strArr[idx]))
 	}
 	return
 }
@@ -176,7 +204,7 @@ func manageStatus() {
 	appConfig := parseAppsFromFile()
 	appList := appConfig.Apps
 	sort.Slice(appList, func(i, j int) bool { return appList[i].Priority < appList[j].Priority })
-	for true {
+	for {
 		activeApps := toHashSet(toSingletonArray(getRunningApps()))
 		curStr, curEmoji := getCurrentApp(activeApps, appList, *appConfig)
 		expiry := time.Now().Add(time.Duration(appConfig.Frequency) * time.Second * 3) // expire after 3 missed updates
@@ -210,15 +238,7 @@ func initClient() {
 	graphqlClient = graphql.NewClient("https://api.github.com/graphql", &httpClient)
 
 	rand.Seed(time.Now().Unix())
-}
-
-func print(v interface{}) {
-	w := json.NewEncoder(os.Stdout)
-	w.SetIndent("", "\t")
-	err := w.Encode(v)
-	if err != nil {
-		panic(err)
-	}
+	isWindows = runtime.GOOS == "windows"
 }
 
 func main() {
