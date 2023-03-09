@@ -18,7 +18,7 @@ I saw a GraphQL tutorial while trying to understand some code in the Teams codeb
 
 ### Debugging
 
-As a primarily TS developer working in some suboptimal, the Golang debugging experience is really nice. What's _not_ nice is not being able to Google things properly because, well, `go <problem>` doesn't always return results for the language. While it's quite easy to replace search strings with `golang <problem>`, it breaks my usual pattern of `<problem> mdn` and as a Vim User™️ I detest unnecessary keystrokes.
+As a primarily TS developer working in some suboptimal, the Golang debugging experience is really nice. What's _not_ nice is not being able to Google things properly because, well, `go <problem>` doesn't always return results for the language. While it's quite easy to replace search strings with `golang <problem>`, it breaks my usual pattern of `<problem> mdn` and as a __Vim User™️__ I detest unnecessary keystrokes.
 
 ### gql libraries (and my sleep-deprived brain)
 
