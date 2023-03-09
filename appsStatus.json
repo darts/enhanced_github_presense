@@ -1,6 +1,5 @@
 {
-    "frequency": 30,
-    "randomise": 20,
+    "frequency": 10,
     "fallback": "Probably sleeping",
     "fallback_emoji": ":zzz:",
     "apps": [
@@ -17,9 +16,21 @@
             "priority": 1
         },
         {
+            "name": "code",
+            "statusText": "Doing \"actual work\"",
+            "emoji": ":computer:",
+            "priority": 1
+        },
+        {
             "name": "firefox-bin",
             "statusText": "Perusing stackoverflow",
             "emoji": ":surfer:",
+            "priority": 1
+        },
+        {
+            "name": "signal-desktop",
+            "statusText": "Just chatting",
+            "emoji": ":speaking_head:",
             "priority": 2
         }
     ]

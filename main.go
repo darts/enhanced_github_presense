@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
@@ -27,7 +29,6 @@ type AppStatus struct {
 
 type AppList struct {
 	Frequency      int32       `json:"frequency"`
-	Randomise      int32       `json:"randomise"`
 	FallbackStatus string      `json:"fallback"`
 	FallbackEmoji  string      `json:"fallback_emoji"`
 	Apps           []AppStatus `json:"apps"`
@@ -160,13 +161,27 @@ func getAppMap(sortedArr []AppStatus) map[int32][]AppStatus {
 }
 
 func getCurrentApp(activeApps map[string]bool, appList []AppStatus, appMap map[int32][]AppStatus, config AppList) (string, string) {
+	allListedRunningApps := []AppStatus{}
+	minPriority := int32(math.Inf(1)) - 1
+	hasActiveApp := false
 	for _, app := range appList {
-		appIsRunning := activeApps[app.Name]
-		if appIsRunning {
-			return app.StatusText, app.Emoji
+		if activeApps[app.Name] {
+			hasActiveApp = true
+			if app.Priority < minPriority {
+				minPriority = app.Priority
+				allListedRunningApps = []AppStatus{app}
+			} else if app.Priority == minPriority {
+				allListedRunningApps = append(allListedRunningApps, app)
+			}
 		}
 	}
-	return config.FallbackStatus, config.FallbackEmoji
+	if !hasActiveApp {
+		return config.FallbackStatus, config.FallbackEmoji
+	}
+
+	aRandomApp := allListedRunningApps[rand.Intn(len(allListedRunningApps))]
+
+	return aRandomApp.StatusText, aRandomApp.Emoji
 }
 
 func manageStatus() {
@@ -206,6 +221,8 @@ func initClient() {
 	}
 
 	graphqlClient = graphql.NewClient("https://api.github.com/graphql", &httpClient)
+
+	rand.Seed(time.Now().Unix())
 }
 
 func print(v interface{}) {
@@ -219,7 +236,6 @@ func print(v interface{}) {
 
 func main() {
 	go resetOnClose()
-
 	initClient()
 	manageStatus()
 }
