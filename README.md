@@ -3,10 +3,9 @@ Like discord presence but github and with a typo.
 
 ## Setup
 
-1. Update `appsStatus.json` to your preferred settings.
-2. Add Github PAT with _user_ permissions to environment variable `GITHUB_PAT`.
-3. Start the application.
-4. (optional) If you're very weird you could run this as a system service I guess. Please let me know if you do, for science.
+1. Add Github PAT with _user_ permissions to environment variable `GITHUB_PAT` or start the application with a token argument.
+2. Start the application. Arguments passed will override env variables.
+3. (optional) If you're very weird you could run this as a system service I guess. Please let me know if you do, for science.
 
 ## gql libraries (and my sleep-deprived brain)
 
