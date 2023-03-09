@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -50,6 +51,9 @@ type authedTransport struct {
 
 var graphqlClient *graphql.Client
 var isWindows bool
+
+//go:embed appsStatus.json
+var jsonFile []byte
 
 var statusMutation struct {
 	ChangeUserStatus struct {
@@ -150,17 +154,12 @@ func toHashSet(arr []string) map[string]bool {
 }
 
 func parseAppsFromFile() *AppList {
-	jsonFilename := "./appsStatus.json"
-	jsonFile, err := os.ReadFile(jsonFilename)
-	if err != nil {
-		log.Fatalf("Opening apps list file failed: %v\n", err)
-	}
 	var apps AppList
-	err = json.Unmarshal(jsonFile, &apps)
+	err := json.Unmarshal(jsonFile, &apps)
 	if err != nil {
 		log.Fatalf("Parsing apps list failed: %v\n", err)
 	}
-	fmt.Println("Loaded JSON from file.")
+	fmt.Println("Loaded apps.")
 	return &apps
 }
 
