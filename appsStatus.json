@@ -2,20 +2,24 @@
     "frequency": 30,
     "randomise": 20,
     "fallback": "Probably sleeping",
+    "fallback_emoji": ":zzz:",
     "apps": [
         {
             "name": "steamwebhelper",
             "statusText": "Gaming",
+            "emoji": ":video_game:",
             "priority": 0
         },
         {
             "name": "code",
             "statusText": "Being a l33t hax0r",
+            "emoji": ":computer:",
             "priority": 1
         },
         {
             "name": "firefox-bin",
             "statusText": "Perusing stackoverflow",
+            "emoji": ":surfer:",
             "priority": 2
         }
     ]
