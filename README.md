@@ -10,7 +10,14 @@ I saw a GraphQL tutorial while trying to understand some code in the Teams codeb
 
 ## Usage
 
-1. Add Github PAT with _user_ permissions to environment variable `GITHUB_PAT` or start the application with a token argument.
+Option A: 
+
+1. Add Github PAT with _user_ permissions to environment variable `GITHUB_PAT`. 
+2. Add Github username to the environment variable `GITHUB_USERNAME`.
+
+Option B:
+
+1. Pass the required Github PAT and username as the `t` and `u` arguments respectively.
 2. Start the application. Arguments passed will override env variables.
 3. (optional) If you're very weird you could run this as a system service I guess. Please let me know if you do, for science.
 

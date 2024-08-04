@@ -5,6 +5,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"math"
@@ -54,6 +55,7 @@ type authedTransport struct {
 
 var graphqlClient *graphql.Client
 var isWindows bool
+var ghUserName string
 
 //go:embed appsStatus.json
 var jsonFile []byte
@@ -169,7 +171,7 @@ func parseAppsFromFile() *AppList {
 func writeToGithubStatus(str string, emoji string, expiry time.Time) bool {
 	fmt.Printf("Writing to Github status: %s\n", str)
 	gqlReq := map[string]interface{}{
-		"input": ChangeUserStatusInput{ClientMutationId: "darts/status", Message: str, Emoji: emoji, ExpiresAt: expiry},
+		"input": ChangeUserStatusInput{ClientMutationId: fmt.Sprintf("%s/status", ghUserName), Message: str, Emoji: emoji, ExpiresAt: expiry},
 	}
 	err := graphqlClient.Mutate(context.Background(), &statusMutation, gqlReq)
 	if err != nil {
@@ -228,21 +230,19 @@ func resetOnClose() {
 }
 
 func initClient() {
-	authTokenEnv := os.Getenv("GITHUB_PAT")
+	authToken := os.Getenv("GITHUB_PAT")
+	ghUserName := os.Getenv("GITHUB_USERNAME")
 
-	var authTokenCmd = ""
-	if len(os.Args) > 1 {
-		authTokenCmd = os.Args[1]
+	flag.StringVar(&authToken, "t", authToken, "your github auth token")
+	flag.StringVar(&ghUserName, "u", ghUserName, "your github username")
+	flag.Parse()
+
+	if len(authToken) < 1 {
+		log.Fatal("GITHUB_PAT env variable not set & no token passed to app!")
 	}
 
-	if len(authTokenEnv) < 1 && len(authTokenCmd) < 1 {
-		log.Fatal("GITHUB_PAT env variable not set & no token passed to app.\nUsage: status <token>")
-	}
-
-	var authToken = authTokenEnv
-
-	if len(authTokenCmd) > 0 {
-		authToken = authTokenCmd
+	if len(ghUserName) < 1 {
+		log.Fatal("GITHUB_USERNAME env variable not set & no username passed to app!")
 	}
 
 	httpClient := http.Client{
